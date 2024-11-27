@@ -1,18 +1,32 @@
 import React, { useState } from "react";
-import { Table, Button, Modal, Form, Input, Checkbox, message } from "antd";
+import { Table, Checkbox, Input, Button, Modal, Form, message } from "antd";
 
 const RoleManagement = () => {
   const [roles, setRoles] = useState([
-    { id: 1, name: "Admin", description: "Full access to all resources", permissions: { Read: true, Write: true, Delete: true } },
-    { id: 2, name: "Editor", description: "Can edit content but cannot delete", permissions: { Read: true, Write: true, Delete: false } },
-    { id: 3, name: "Viewer", description: "Can only view content", permissions: { Read: true, Write: false, Delete: false } },
+    {
+      id: 1,
+      name: "Admin",
+      description: "Full access to all resources",
+      permissions: ["Read", "Write", "Delete"],
+    },
+    {
+      id: 2,
+      name: "Editor",
+      description: "Can edit content but cannot delete",
+      permissions: ["Read", "Write"],
+    },
+    {
+      id: 3,
+      name: "Viewer",
+      description: "Can only view content",
+      permissions: ["Read"],
+    },
   ]);
 
+  const [availablePermissions] = useState(["Read", "Write", "Delete"]);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [editingRole, setEditingRole] = useState(null);
   const [form] = Form.useForm();
-
-  const permissions = ["Read", "Write", "Delete"];
 
   const handleAddRole = () => {
     setEditingRole(null);
@@ -30,25 +44,32 @@ const RoleManagement = () => {
     setIsModalVisible(true);
   };
 
+  const handlePermissionToggle = (roleId, permission) => {
+    setRoles((prevRoles) =>
+      prevRoles.map((role) =>
+        role.id === roleId
+          ? {
+              ...role,
+              permissions: role.permissions.includes(permission)
+                ? role.permissions.filter((perm) => perm !== permission)
+                : [...role.permissions, permission],
+            }
+          : role
+      )
+    );
+    message.success("Permissions updated successfully!");
+  };
+
   const handleDeleteRole = (role) => {
     Modal.confirm({
       title: "Are you sure you want to delete this role?",
+      content: `Role: ${role.name}`,
       okText: "Yes",
       okType: "danger",
       cancelText: "No",
       onOk: () => {
         setRoles((prevRoles) => prevRoles.filter((r) => r.id !== role.id));
         message.success("Role deleted successfully");
-      },
-    });
-  };
-
-  const handlePermissionChange = (permission, value) => {
-    const currentPermissions = form.getFieldValue("permissions") || {};
-    form.setFieldsValue({
-      permissions: {
-        ...currentPermissions,
-        [permission]: value,
       },
     });
   };
@@ -77,7 +98,7 @@ const RoleManagement = () => {
     setIsModalVisible(false);
   };
 
-  const roleColumns = [
+  const columns = [
     {
       title: "Role Name",
       dataIndex: "name",
@@ -88,15 +109,16 @@ const RoleManagement = () => {
       dataIndex: "description",
       key: "description",
     },
-    {
-      title: "Permissions",
-      key: "permissions",
-      render: (_, record) =>
-        Object.entries(record.permissions)
-          .filter(([, value]) => value)
-          .map(([perm]) => perm)
-          .join(", "),
-    },
+    ...availablePermissions.map((permission) => ({
+      title: permission,
+      key: permission,
+      render: (_, record) => (
+        <Checkbox
+          checked={record.permissions.includes(permission)}
+          onChange={() => handlePermissionToggle(record.id, permission)}
+        />
+      ),
+    })),
     {
       title: "Actions",
       key: "actions",
@@ -119,11 +141,16 @@ const RoleManagement = () => {
       <Button type="primary" className="mb-4" onClick={handleAddRole}>
         Add Role
       </Button>
-      <Table dataSource={roles} columns={roleColumns} rowKey="id" pagination={false} />
+      <Table
+        dataSource={roles}
+        columns={columns}
+        rowKey="id"
+        pagination={false}
+      />
 
       <Modal
         title={editingRole ? "Edit Role" : "Add Role"}
-        visible={isModalVisible}
+        open={isModalVisible}
         onCancel={() => setIsModalVisible(false)}
         footer={null}
       >
@@ -138,22 +165,29 @@ const RoleManagement = () => {
           <Form.Item
             label="Description"
             name="description"
-            rules={[{ required: true, message: "Please enter the description" }]}
+            rules={[
+              { required: true, message: "Please enter the description" },
+            ]}
           >
             <Input placeholder="Enter description" />
           </Form.Item>
           <Form.Item label="Permissions" name="permissions">
-            <div>
-              {permissions.map((permission) => (
+            <Checkbox.Group>
+              {availablePermissions.map((permission) => (
                 <Checkbox
                   key={permission}
-                  checked={form.getFieldValue("permissions")?.[permission] || false}
-                  onChange={(e) => handlePermissionChange(permission, e.target.checked)}
+                  value={permission}
+                  checked={
+                    form.getFieldValue("permissions")?.[permission] || false
+                  }
+                  onChange={(e) =>
+                    handlePermissionToggle(permission, e.target.checked)
+                  }
                 >
                   {permission}
                 </Checkbox>
               ))}
-            </div>
+            </Checkbox.Group>
           </Form.Item>
           <Form.Item>
             <Button type="primary" htmlType="submit">
