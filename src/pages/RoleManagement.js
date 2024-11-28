@@ -1,5 +1,16 @@
 import React, { useState } from "react";
-import { Table, Checkbox, Input, Button, Modal, Form, message } from "antd";
+import {
+  Table,
+  Checkbox,
+  Input,
+  Button,
+  Modal,
+  Form,
+  message,
+  Tooltip,
+} from "antd";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faUser, faEdit, faTrash } from "@fortawesome/free-solid-svg-icons";
 
 const RoleManagement = () => {
   const [roles, setRoles] = useState([
@@ -124,12 +135,16 @@ const RoleManagement = () => {
       key: "actions",
       render: (_, record) => (
         <div>
-          <Button type="link" onClick={() => handleEditRole(record)}>
-            Edit
-          </Button>
-          <Button type="link" danger onClick={() => handleDeleteRole(record)}>
-            Delete
-          </Button>
+          <Tooltip title="Edit">
+            <Button type="link" onClick={() => handleEditRole(record)}>
+              <FontAwesomeIcon icon={faEdit} />
+            </Button>
+          </Tooltip>
+          <Tooltip title="Delete">
+            <Button type="link" danger onClick={() => handleDeleteRole(record)}>
+              <FontAwesomeIcon icon={faTrash} />
+            </Button>
+          </Tooltip>
         </div>
       ),
     },

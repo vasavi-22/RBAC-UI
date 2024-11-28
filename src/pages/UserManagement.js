@@ -1,10 +1,33 @@
 import React, { useState } from "react";
-import { Table, Button, Modal, Form, Input, Select, message } from "antd";
+import {
+  Table,
+  Button,
+  Modal,
+  Form,
+  Input,
+  Select,
+  message,
+  Tooltip,
+} from "antd";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faUser, faEdit, faTrash, faCheckCircle, faTimesCircle} from "@fortawesome/free-solid-svg-icons";
 
 const UserManagement = () => {
   const [users, setUsers] = useState([
-    { id: 1, name: "John Doe", email: "john@example.com", roles: ["Admin"], status: "Active" },
-    { id: 2, name: "Jane Smith", email: "jane@example.com", roles: ["Editor", "Viewer"], status: "Inactive" },
+    {
+      id: 1,
+      name: "John Doe",
+      email: "john@example.com",
+      roles: ["Admin"],
+      status: "Active",
+    },
+    {
+      id: 2,
+      name: "Jane Smith",
+      email: "jane@example.com",
+      roles: ["Editor", "Viewer"],
+      status: "Inactive",
+    },
   ]);
 
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -62,7 +85,9 @@ const UserManagement = () => {
         <Select
           mode="multiple"
           value={roles}
-          onChange={(selectedRoles) => handleRoleChange(record.id, selectedRoles)}
+          onChange={(selectedRoles) =>
+            handleRoleChange(record.id, selectedRoles)
+          }
           style={{ width: "100%" }}
         >
           <Select.Option value="Admin">Admin</Select.Option>
@@ -71,18 +96,42 @@ const UserManagement = () => {
         </Select>
       ),
     },
-    { title: "Status", dataIndex: "status", key: "status" },
+    {
+      title: "Status",
+      dataIndex: "status",
+      key: "status",
+      render: (status) => (
+        <Tooltip title={status === "Active" ? "Active" : "Inactive"}>
+          <FontAwesomeIcon
+            icon={status === "Active" ? faCheckCircle : faTimesCircle}
+            style={{
+              color: status === "Active" ? "green" : "red",
+              fontSize: "16px",
+              marginLeft: "10px"
+            }}
+          />
+        </Tooltip>
+      ),
+    },
     {
       title: "Actions",
       key: "actions",
       render: (_, record) => (
         <div>
-          <Button type="link" onClick={() => handleEditUser(record)}>
-            Edit
-          </Button>
-          <Button type="link" danger onClick={() => handleDeleteUser(record.id)}>
-            Delete
-          </Button>
+          <Tooltip title="Edit">
+            <Button type="link" onClick={() => handleEditUser(record)}>
+              <FontAwesomeIcon icon={faEdit} />
+            </Button>
+          </Tooltip>
+          <Tooltip title="Delete">
+            <Button
+              type="link"
+              danger
+              onClick={() => handleDeleteUser(record.id)}
+            >
+              <FontAwesomeIcon icon={faTrash} />
+            </Button>
+          </Tooltip>
         </div>
       ),
     },
@@ -94,12 +143,16 @@ const UserManagement = () => {
       <Button type="primary" className="mb-4" onClick={handleAddUser}>
         Add User
       </Button>
-      <Table dataSource={users} columns={columns} rowKey="id" 
-       pagination={{
-        defaultPageSize: 5, // Set the default number of records per page
-        // pageSizeOptions: ["5", "10", "20"],  Customize the page size options
-        // showSizeChanger: true, Allow changing the page size
-      }}/>
+      <Table
+        dataSource={users}
+        columns={columns}
+        rowKey="id"
+        pagination={{
+          defaultPageSize: 5, // Set the default number of records per page
+          // pageSizeOptions: ["5", "10", "20"],  Customize the page size options
+          // showSizeChanger: true, Allow changing the page size
+        }}
+      />
 
       <Modal
         title={editingUser ? "Edit User" : "Add User"}
@@ -111,7 +164,9 @@ const UserManagement = () => {
           <Form.Item
             label="Name"
             name="name"
-            rules={[{ required: true, message: "Please enter the user's name" }]}
+            rules={[
+              { required: true, message: "Please enter the user's name" },
+            ]}
           >
             <Input placeholder="Enter name" />
           </Form.Item>
@@ -128,7 +183,9 @@ const UserManagement = () => {
           <Form.Item
             label="Roles"
             name="roles"
-            rules={[{ required: true, message: "Please select at least one role" }]}
+            rules={[
+              { required: true, message: "Please select at least one role" },
+            ]}
           >
             <Select mode="multiple" placeholder="Select roles">
               <Select.Option value="Admin">Admin</Select.Option>
