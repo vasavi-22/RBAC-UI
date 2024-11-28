@@ -12,7 +12,7 @@ const App = () => {
         <Sidebar />
         <div className="flex-1 ml-64 p-6">
           <Routes>
-            <Route path="/" element={<Home />} />
+            <Route path="/" element={<UserManagement />} />
             <Route path="/users" element={<UserManagement />} />
             <Route path="/roles" element={<RoleManagement />} />
           </Routes>

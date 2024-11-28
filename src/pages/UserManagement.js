@@ -8,9 +8,17 @@ import {
   Select,
   message,
   Tooltip,
+  Row,
+  Col,
 } from "antd";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faUser, faEdit, faTrash, faCheckCircle, faTimesCircle} from "@fortawesome/free-solid-svg-icons";
+import {
+  faUser,
+  faEdit,
+  faTrash,
+  faCheckCircle,
+  faTimesCircle,
+} from "@fortawesome/free-solid-svg-icons";
 
 const UserManagement = () => {
   const [users, setUsers] = useState([
@@ -34,6 +42,27 @@ const UserManagement = () => {
   const [editingUser, setEditingUser] = useState(null);
   const [form] = Form.useForm();
 
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedRole, setSelectedRole] = useState(null);
+
+  const [auditLogs, setAuditLogs] = useState([]);
+
+  const addAuditLog = (actor, action) => {
+    const timestamp = new Date().toLocaleString();
+    const newLog = { timestamp, actor, action };
+    setAuditLogs((prevLogs) => [newLog, ...prevLogs]);
+  };
+
+  const filteredUsers = users
+    .filter(
+      (user) =>
+        user.name.toLowerCase().includes(searchTerm) ||
+        user.email.toLowerCase().includes(searchTerm)
+    )
+    .filter((user) =>
+      selectedRole ? user.roles.includes(selectedRole) : true
+    );
+
   const handleAddUser = () => {
     setIsModalVisible(true);
     setEditingUser(null);
@@ -47,7 +76,10 @@ const UserManagement = () => {
   };
 
   const handleDeleteUser = (userId) => {
+    const user = users.filter((user) => user.id === userId);
+    console.log(user);
     setUsers(users.filter((user) => user.id !== userId));
+    addAuditLog("Admin", `Deleted user: ${user[0].name}`);
     message.success("User deleted successfully");
   };
 
@@ -58,10 +90,12 @@ const UserManagement = () => {
           user.id === editingUser.id ? { ...user, ...values } : user
         )
       );
+      addAuditLog("Admin", `Updated user: ${editingUser.name}`);
       message.success("User updated successfully");
     } else {
       const newUser = { id: users.length + 1, ...values };
       setUsers((prevUsers) => [...prevUsers, newUser]);
+      addAuditLog("Admin", `Added new user: ${newUser.name}`);
       message.success("User added successfully");
     }
     setIsModalVisible(false);
@@ -107,7 +141,7 @@ const UserManagement = () => {
             style={{
               color: status === "Active" ? "green" : "red",
               fontSize: "16px",
-              marginLeft: "10px"
+              marginLeft: "10px",
             }}
           />
         </Tooltip>
@@ -137,14 +171,43 @@ const UserManagement = () => {
     },
   ];
 
+  const auditLogColumns = [
+    { title: "Timestamp", dataIndex: "timestamp", key: "timestamp" },
+    { title: "Actor", dataIndex: "actor", key: "actor" },
+    { title: "Action", dataIndex: "action", key: "action" },
+  ];
+
   return (
     <div>
       <h1 className="text-2xl font-bold mb-4">User Management</h1>
+      <Row gutter={16} className="mb-4">
+        <Col span={12}>
+          <Input
+            placeholder="Search by name or email"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value.toLowerCase())}
+          />
+        </Col>
+        <Col span={12}>
+          <Select
+            allowClear
+            placeholder="Filter by role"
+            style={{ width: "100%" }}
+            value={selectedRole}
+            onChange={(value) => setSelectedRole(value)}
+          >
+            <Select.Option value="Admin">Admin</Select.Option>
+            <Select.Option value="Editor">Editor</Select.Option>
+            <Select.Option value="Viewer">Viewer</Select.Option>
+          </Select>
+        </Col>
+      </Row>
+
       <Button type="primary" className="mb-4" onClick={handleAddUser}>
         Add User
       </Button>
       <Table
-        dataSource={users}
+        dataSource={filteredUsers}
         columns={columns}
         rowKey="id"
         pagination={{
@@ -211,6 +274,14 @@ const UserManagement = () => {
           </Form.Item>
         </Form>
       </Modal>
+
+      <h2 className="text-xl font-bold mb-4">Audit Logs</h2>
+      <Table
+        dataSource={auditLogs}
+        columns={auditLogColumns}
+        rowKey="timestamp"
+        pagination={{ pageSize: 5 }}
+      />
     </div>
   );
 };
